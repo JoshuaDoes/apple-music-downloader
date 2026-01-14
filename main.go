@@ -1028,7 +1028,7 @@ func ripTrack(track *task.Track, token string, mediaUserToken string) {
 	tagsString := strings.Join(tags, ":")
 	cmd := exec.Command("MP4Box", "-itags", tagsString, trackPath)
 	if err := cmd.Run(); err != nil {
-		fmt.Printf("Embed failed: %v\n", err)
+		fmt.Printf("Embed failed (MP4Box -itags %s %s): %v\n", tagsString, trackPath, err)
 		counter.Error++
 		return
 	}
@@ -1225,7 +1225,7 @@ func ripStation(albumId string, token string, storefront string, mediaUserToken 
 		tagsString := strings.Join(tags, ":")
 		cmd := exec.Command("MP4Box", "-itags", tagsString, trackPath)
 		if err := cmd.Run(); err != nil {
-			fmt.Printf("Embed failed: %v\n", err)
+			fmt.Printf("Embed failed (MP4Box -itags %s %s): %v\n", tagsString, trackPath, err)
 		}
 		AddedTracks = append(AddedTracks, AddedTrack{
 			Path:     trackPath,

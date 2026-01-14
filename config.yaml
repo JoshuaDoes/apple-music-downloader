@@ -11,9 +11,9 @@ emby-animated-artwork: false    # If enabled, requires ffmpeg
 embed-cover: true
 cover-size: 5000x5000
 cover-format: original       #jpg png or original
-alac-save-folder: /home/joshuadoes/Music/AppleMusic
-atmos-save-folder: /home/joshuadoes/Music/AppleMusic
-aac-save-folder: /home/joshuadoes/Music/AppleMusic
+alac-save-folder: /home/joshuadoes/Music
+atmos-save-folder: /home/joshuadoes/Music
+aac-save-folder: /home/joshuadoes/Music
 max-memory-limit: 512 # MB
 decrypt-m3u8-port: "127.0.0.1:10020"
 get-m3u8-port: "127.0.0.1:20020"
