@@ -9,3 +9,4 @@
 !utils/*
 !envsetup
 !hooker
+!config.yaml.skeleton
