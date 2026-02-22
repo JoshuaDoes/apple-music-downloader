@@ -1,0 +1,55 @@
+#!/bin/bash
+
+NAMES=(AMAAD AMR AMSH am search song album artist amsearch amsong amalbum amartist)
+for n in "${NAMES[@]}"; do
+  unset "$n" 2>/dev/null
+  unset -f "$n" 2>/dev/null
+  unalias "$n" 2>/dev/null
+done
+
+if ! command -v go version >/dev/null 2>&1; then
+  echo "! Failed to find Go, refusing to source Apple Music downloader!" >&2
+  return 1 2>/dev/null || exit 1
+fi
+
+export AMAAD="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+. "$AMAAD/hooker"
+#if ! bash "$AMAAD/hooker" auto; then
+#  echo "! Failed to hook into Apple Music (exit $?), refusing to source downloader!" >&2
+#  return 2 2>/dev/null || exit 2
+#fi
+
+if [ ! -f "$AMAAD/go.mod" ]; then
+  echo "! Failed to find module for Apple Music downloader, refusing to source it!" >&2
+  return 3 2>/dev/null || exit 3
+fi
+
+am() {
+  if ! amrunning; then
+    echo "! Must start Apple Music wrapper first with \`amstart\` or \`amlogin\` before running am commands!"
+    return 1
+  fi
+  pushd "$AMAAD" >/dev/null
+  go run . "$@"
+  CODE=$?
+  popd >/dev/null
+  return $CODE
+}
+alias search='am --search'
+alias song='search song'
+alias album='search album'
+alias artist='search artist'
+alias amsearch='search'
+alias amsong='song'
+alias amalbum='album'
+alias amartist='artist'
+
+echo ""
+echo "* Apple Music downloader environment is ready!"
+echo "! Make sure Apple Music is open before continuing!"
+echo "# Type \`amstart\` if you've set this up before."
+echo "# - If it's your first time / you're seeing decryption errors, try \`amlogin\` to log into your Apple account."
+echo "# Type \`amstop\` before closing Apple Music so that it can safely unhook from it."
+echo "# Available commands: am amstart amlogin am2fa amstop amrunning amsearch (search) amsong (song) amalbum (album) amartist (artist)"
+echo ""

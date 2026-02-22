@@ -1,0 +1,89 @@
+#!/bin/bash
+
+NAMES=(AMWD AMW AMR AML AMDONE silent amstop amrunning amstart)
+for n in "${NAMES[@]}"; do
+  unset "$n" 2>/dev/null
+  unset -f "$n" 2>/dev/null
+  unalias "$n" 2>/dev/null
+done
+
+AMWD="$AMAAD/wrapper"
+AMW="wrapper"
+AMR="amrun.sh"
+AML="amlogin.sh"
+AMDONE="$AMWD/.done"
+DATA="$AMWD/rootfs/data"
+AUTH="$DATA/2fa.txt"
+
+silent() {
+  command "$@" >/dev/null 2>&1
+  return $?
+}
+amstop() {
+  if ! amrunning; then return 0; fi
+  if ! sudo echo "* Stopping Apple Music wrapper"; then
+    echo "! Failed to get sudo perms to stop wrapper!"
+    return 1
+  fi
+  silent sudo docker rm $(sudo docker stop $(sudo docker ps -a --filter ancestor=wrapper --format="{{.ID}}"))
+  silent killall "$AMW"
+  silent killall "$AMR"
+  sleep 1
+  if pidof -x "$AMR"; then
+    echo "! Failed to stop Apple Music wrapper!"
+    return 2
+  fi
+}
+amrunning() {
+  if amrunning_r; then return 0; fi
+  if amrunning_w; then return 0; fi
+  return 1
+}
+amrunning_r() {
+  if ! silent pidof -x "$AMR"; then return 1; fi
+}
+amrunning_w() {
+  if ! silent pidof "$AMW"; then return 1; fi
+}
+amstart() {
+  amdaemon "$AMWD/AMR"
+}
+amlogin() {
+  amdaemon "$AMWD/$AML"
+}
+am2fa() {
+  echo "$1" > "$AUTH"
+}
+amdaemon() {
+  export AMSH="$1"
+  if ! amstop; then return 1; fi
+  if ! sudo echo "* Starting Apple Music wrapper"; then
+    echo "! Failed to get sudo perms to start wrapper!"
+    return 1
+  fi
+  rm -f "$AMDONE"
+  pushd "$AMWD"
+  (silent sudo bash "$AMSH" &)
+  while true; do
+    if amrunning_w; then break; fi
+    if [ -f "$AMDONE" ]; then
+      break
+    fi
+    sleep 1
+  done
+  popd
+  if ! amrunning_w; then
+    echo "! Failed to start Apple Music wrapper!"
+    if [ -f "$AMDONE" ]; then
+      echo "Exit: $(cat $AMDONE)"
+    else
+      echo "Exit: no code found"
+    fi
+    return 2
+  fi
+}
+
+if [[ "$1" == "auto" ]]; then
+  amstart
+  exit $?
+fi
